@@ -18,6 +18,7 @@ export default function PraktikumClient({ data, user }) {
     Tanggal_Mulai: "",
   });
   const [editId, setEditId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   // 🟢 Tambah / Update
   const save = async (e) => {
@@ -31,6 +32,7 @@ export default function PraktikumClient({ data, user }) {
       body: JSON.stringify(body),
     });
     if (res.ok) {
+      setShowModal(false);
       location.reload(); // reload biar sinkron
     }
   };
@@ -42,8 +44,39 @@ export default function PraktikumClient({ data, user }) {
     if (res.ok) location.reload();
   };
 
+  // 🟡 Buka modal untuk tambah/edit
+  const openModal = (p = null) => {
+    if (p) {
+      setEditId(p.ID);
+      setForm(p);
+    } else {
+      setEditId(null);
+      setForm({
+        Mata_Kuliah: "",
+        Jurusan: "",
+        Kelas: "",
+        Semester: "",
+        Hari: "",
+        Jam_Mulai: "",
+        Jam_Ahir: "",
+        Shift: "",
+        Assisten: "",
+        Catatan: "",
+        Tanggal_Mulai: "",
+      });
+    }
+    setShowModal(true);
+  };
+
   return (
     <div>
+      {/* Tombol Tambah */}
+      {(user.role === "admin" || user.role === "laboran") && (
+        <button onClick={() => openModal()} style={{ marginBottom: "10px" }}>
+          Tambah Praktikum
+        </button>
+      )}
+
       {/* Tabel */}
       <table border="1" cellPadding="6">
         <thead>
@@ -73,91 +106,124 @@ export default function PraktikumClient({ data, user }) {
               <td>{p.Shift}</td>
               <td>{p.Assisten}</td>
               <td>
-                <button
-                  onClick={() => {
-                    setEditId(p.ID);
-                    setForm(p);
-                  }}
-                >
-                  Edit
-                </button>
-                <button onClick={() => del(p.ID)}>Delete</button>
+                {(user.role === "admin" || user.role === "laboran") && (
+                  <>
+                    <button onClick={() => openModal(p)}>Edit</button>
+                    <button onClick={() => del(p.ID)}>Delete</button>
+                  </>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Form Tambah/Edit */}
-      {(user.role === "admin" || user.role === "laboran") && (
-        <form onSubmit={save} style={{ marginTop: "20px" }}>
-          <h3>{editId ? "Edit Praktikum" : "Tambah Praktikum"}</h3>
-          <input
-            placeholder="Mata Kuliah"
-            value={form.Mata_Kuliah}
-            onChange={(e) => setForm({ ...form, Mata_Kuliah: e.target.value })}
-            required
-          />
-          <input
-            placeholder="Jurusan"
-            value={form.Jurusan}
-            onChange={(e) => setForm({ ...form, Jurusan: e.target.value })}
-            required
-          />
-          <input
-            placeholder="Kelas"
-            value={form.Kelas}
-            onChange={(e) => setForm({ ...form, Kelas: e.target.value })}
-            required
-          />
-          <input
-            placeholder="Semester"
-            value={form.Semester}
-            onChange={(e) => setForm({ ...form, Semester: e.target.value })}
-          />
-          <input
-            placeholder="Hari"
-            value={form.Hari}
-            onChange={(e) => setForm({ ...form, Hari: e.target.value })}
-          />
-          <input
-            placeholder="Jam Mulai"
-            type="time"
-            value={form.Jam_Mulai}
-            onChange={(e) => setForm({ ...form, Jam_Mulai: e.target.value })}
-          />
-          <input
-            placeholder="Jam Akhir"
-            type="time"
-            value={form.Jam_Ahir}
-            onChange={(e) => setForm({ ...form, Jam_Ahir: e.target.value })}
-          />
-          <input
-            placeholder="Shift"
-            value={form.Shift}
-            onChange={(e) => setForm({ ...form, Shift: e.target.value })}
-          />
-          <input
-            placeholder="Asisten"
-            value={form.Assisten}
-            onChange={(e) => setForm({ ...form, Assisten: e.target.value })}
-          />
-          <input
-            placeholder="Catatan"
-            value={form.Catatan}
-            onChange={(e) => setForm({ ...form, Catatan: e.target.value })}
-          />
-          <input
-            type="date"
-            placeholder="Tanggal Mulai"
-            value={form.Tanggal_Mulai}
-            onChange={(e) =>
-              setForm({ ...form, Tanggal_Mulai: e.target.value })
-            }
-          />
+      {/* Modal Form */}
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false); // klik luar area
+          }}
+        >
+          <form
+            onSubmit={save}
+            style={{
+              background: "#fff",
+              padding: "20px",
+              borderRadius: "8px",
+              minWidth: "300px",
+            }}
+          >
+            <h3>{editId ? "Edit Praktikum" : "Tambah Praktikum"}</h3>
 
-          <button type="submit">{editId ? "Update" : "Tambah"}</button>
-        </form>
+            <input
+              placeholder="Mata Kuliah"
+              value={form.Mata_Kuliah}
+              onChange={(e) => setForm({ ...form, Mata_Kuliah: e.target.value })}
+              required
+            />
+            <input
+              placeholder="Jurusan"
+              value={form.Jurusan}
+              onChange={(e) => setForm({ ...form, Jurusan: e.target.value })}
+              required
+            />
+            <input
+              placeholder="Kelas"
+              value={form.Kelas}
+              onChange={(e) => setForm({ ...form, Kelas: e.target.value })}
+              required
+            />
+            <input
+              placeholder="Semester"
+              value={form.Semester}
+              onChange={(e) => setForm({ ...form, Semester: e.target.value })}
+            />
+            <input
+              placeholder="Hari"
+              value={form.Hari}
+              onChange={(e) => setForm({ ...form, Hari: e.target.value })}
+            />
+            <input
+              placeholder="Jam Mulai"
+              type="time"
+              value={form.Jam_Mulai}
+              onChange={(e) => setForm({ ...form, Jam_Mulai: e.target.value })}
+            />
+            <input
+              placeholder="Jam Akhir"
+              type="time"
+              value={form.Jam_Ahir}
+              onChange={(e) => setForm({ ...form, Jam_Ahir: e.target.value })}
+            />
+            <input
+              placeholder="Shift"
+              value={form.Shift}
+              onChange={(e) => setForm({ ...form, Shift: e.target.value })}
+            />
+            <input
+              placeholder="Asisten"
+              value={form.Assisten}
+              onChange={(e) => setForm({ ...form, Assisten: e.target.value })}
+            />
+            <input
+              placeholder="Catatan"
+              value={form.Catatan}
+              onChange={(e) => setForm({ ...form, Catatan: e.target.value })}
+            />
+            <input
+              type="date"
+              placeholder="Tanggal Mulai"
+              value={form.Tanggal_Mulai}
+              onChange={(e) =>
+                setForm({ ...form, Tanggal_Mulai: e.target.value })
+              }
+            />
+
+            <div style={{ marginTop: "10px" }}>
+              <button type="submit">{editId ? "Update" : "Tambah"}</button>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{ marginLeft: "10px" }}
+              >
+                Batal
+              </button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );
